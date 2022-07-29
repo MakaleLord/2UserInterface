@@ -1,0 +1,138 @@
+<html>
+
+<head>
+  <title>Online Gym</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Kumar+One+Outline|Muli&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h1>ONLINE GYM</h1>
+
+  <audio id="ticking" src="ticking.mp3" preload loop></audio>
+  <audio id="alarm" src="alarm.mp3" preload></audio>
+
+  <div class="container before-login">
+    <form id='login-form'>
+      <h3 class='form-title'> Existing user can login here </h3>
+      <input type='username' id='login-username-input' placeholder='Enter your email id' required>
+      <input type='password' id='login-password-input' placeholder='Enter your password' required>
+      <input type='submit' value='Login'>
+    </form>
+
+    <form id='signup-form'>
+      <h3 class='form-title'> Or create a new account. It's Free. </h3>
+      <input type='text' id='signup-username-input' placeholder='Enter your username' required>
+      <input type='password' id='signup-password-input' placeholder='Enter your password' required minlength=6>
+      <input type='password' id='confirm-password-input' placeholder='Confirm your password' required minlength=6>
+      <input type='submit' value='Sign up'>
+    </form>
+  </div>
+
+  <div class="container after-login">
+    <div class="input-container">
+      <h3>Select the activity</h3>
+      <select>
+        <option>Cycling</option>
+        <option>Push ups</option>
+        <option>Sit ups</option>
+      </select>
+      <input type="number" placeholder="Minutes" id="minuteText">
+      <button>Start</button>
+    </div>
+    <div class="timer-container">
+    </div>
+    <div class="list-container">
+      <h3>Here's what you did:</h3>
+    </div>
+  </div>
+
+  <script>
+    $('.after-login').hide();
+
+    var exercise, time, seconds, timeout, minuteInterval, remaining, secondsInterval, timeSpend;
+
+    function start() {
+      clearTimeout(timeout);
+      clearInterval(minuteInterval);
+      clearInterval(secondsInterval);
+
+      $('#ticking')[0].play();
+      time = $('#minuteText').val();
+      exercise = $('select').val();
+      seconds = time * 60;
+      var ms = seconds * 1000;
+
+      timeSpend = 0;
+      remaining = time;
+
+      var startHtml = `<div class="progress"></div>
+                         <img src="exercises.gif">
+                         <h3>${exercise}</h3>
+                         <p id='status'>
+                            Your time for ${time} minutes has started.
+                         </p>`;
+
+      $('.timer-container').html(startHtml);
+      $('.timer-container').css('background-color', '#0984e3');
+
+      timeout = setTimeout(end, ms);
+      secondsInterval = setInterval(tick, 1000);
+      minuteInterval = setInterval(update, 60000);
+    }
+    $('button').click(start);
+
+    function update() {
+      remaining = remaining - 1;
+      $('#status').text(`Remaining Time: ${remaining} minutes`);
+    }
+
+    function tick() {
+      timeSpend = timeSpend + 1;
+      var percentage = (timeSpend / seconds) * 100;
+      $('.progress').css('width', percentage + "%");
+    }
+
+    function end() {
+      clearInterval(minuteInterval);
+      clearInterval(secondsInterval);
+
+      $('.timer-container').css('background-color', '#00b894');
+      $('.timer-container').html(`<img src="alarm.gif">`);
+      $('#ticking')[0].pause();
+      $('#alarm')[0].play();
+
+      $('.list-container').append(`<p class='item'>${exercise} : ${time} mins</p>`)
+
+    }
+
+    function creatAccount(eventObj) {
+      eventObj.preventDefault();
+      var password = $('#signup-password-input').val();
+      var password = $('#confirm-password-input').val();
+      var username = $('signup-username-input').val();
+      var userObj = {
+        mode: 'signup',
+        username: username,
+        password: password
+      }
+      $.ajax({
+        url: 'timer.py',
+        data: userObj,
+        success: showApp
+      })
+    }
+    $('#signup-form').submit(createAccount);
+    
+    function showApp(response) {
+      console.log(response)
+    }
+
+  </script>
+
+</body>
+
+</html>
+<script type="application/javascript" src="/share.js"></script>
